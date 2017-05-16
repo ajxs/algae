@@ -1,0 +1,79 @@
+<html>
+<head>
+	<title>Algae</title>
+
+	<script type="text/javascript" src="../src/main.js"></script>
+	<script type="text/javascript">
+
+		let issueTracker = {
+			data: {
+				issues: [
+					{
+						title: 'test1',
+						description: 'something',
+						status: true,
+						updates: [{
+							title: 'update1',
+							description: 'test test test test'
+						}]
+				 	},
+					{
+						title: 'test2',
+						status: true,
+						updates: [{
+							title: 'update1',
+							description: 'test test test test'
+						}]
+				 	},
+					{
+						title: 'test3',
+						status: false,
+						updates: [{
+							title: 'update1',
+							description: 'test test test test'
+						}, {
+							title: 'update2',
+							description: 'test test test test'
+						}, {
+							title: 'update3',
+							description: 'test test test test'
+						}]
+				 	},
+				]
+			},
+			container: 'issueTracker',
+			template: 'issueTrackerTemplate',
+			templateInstance: null
+		};
+
+		window.onload = function() {
+			$_algae.loadComponent(issueTracker);
+		};
+
+	</script>
+
+
+	<script type="text/html" id="issueTrackerTemplate">
+		<ul class="issues">
+			<li data-loop-source="issues">
+				<h1>#!$title</h1>
+				<div>#!$description</div>
+				<div data-display-condition="$self.status">
+					YES - #!$title
+					<div>test - #!$title</div>
+				</div>
+				<ul>
+					<li data-display-condition="$self.updates" data-loop-source="updates">
+						<div>#!$title</div>
+						<div>#!$description</div>
+					</li>
+				</ul>
+			</li>
+		</ul>
+	</script>
+
+</head>
+<body>
+	<div id="issueTracker"></div>
+</body>
+</html>
