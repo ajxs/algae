@@ -5,16 +5,26 @@ const $_algae = {};
 $_algae.htmlParser = new DOMParser();
 
 $_algae.parseDomElement = (current, data = {}) => {
-	if(!current) return null;
-	let parentNode = current.parentNode, refNode = current.nextSibling;
+	let parentNode = current.parentNode,
+		refNode = current.nextSibling;
+
+	//@TODO: Allow list item to have condition
 
 	if(current.dataset.displayCondition) {
 		// this condition is to allow programmatically created elements to be parsed here
 		if(parentNode) parentNode.removeChild(current);
 		try {
+
+			if(current.dataset.displayCondition == '$self.approved') {
+				console.log(data);
+			};
+
 			if(new Function('$self', `return ${current.dataset.displayCondition}`)(data)) {
 				// no need to parse the element here, it will be parsed anyway
+				delete current.dataset.displayCondition;
 				parentNode.insertBefore(current, refNode);
+			} else {
+				return;    // condition not passed
 			}
 		} catch(e) {
 			console.error(e);
@@ -23,11 +33,12 @@ $_algae.parseDomElement = (current, data = {}) => {
 	}
 
 	if(current.dataset.loopSource) {
-		let loopContainer = document.createDocumentFragment();
-		(data[current.dataset.loopSource] || []).forEach(s => {
+		let loopContainer = document.createDocumentFragment(),
+			loopSource = data[current.dataset.loopSource] || [];
+		loopSource.forEach(source => {
 			let newTemplateItem = current.cloneNode(true);
 			delete newTemplateItem.dataset.loopSource;
-			$_algae.parseDomElement(newTemplateItem, s);
+			$_algae.parseDomElement(newTemplateItem, source);
 			loopContainer.appendChild(newTemplateItem);
 		});
 		parentNode.removeChild(current);
@@ -49,7 +60,7 @@ $_algae.parseDomElementInner = (text = '', data = {}) => {
 	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => data[key] || '');    // parse vars
 	ret = ret.replace(/\#\!\^\(([^\<\>\s]*)\)/g, (match, key) => {                       // parse 'functions'
 		try {    // wrap evaluation in try/catch to avoid breakage if passed invalid data
-			return new Function('$self', `return ${key}`)(data);
+			return new Function('$self', `return ${key}`)(data) || '';
 		} catch(e) {
 			console.error(e);
 			return null;
