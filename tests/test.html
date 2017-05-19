@@ -5,73 +5,73 @@
 	<script type="text/javascript" src="../src/main.js"></script>
 	<script type="text/javascript">
 
-	let testComponent = {
-		data: {
-			collection: [
-				{
-					name: "item 1",
-					description: "first test",
-					status: true,
-					subitems: [
-						{
-							status: true,
-							description: 'item 1: subitem1 desc'
-						}, {
-							status: false,
-							description: 'item 1: subitem2 desc'
-						}, {
-							status: true,
-							description: 'item 1: subitem3 desc'
-						}
-					]
-				}, {
-					name: "item 2",
-					description: "second test",
-					status: false,
-					subitems: [
-						{
-							status: true,
-							description: 'item 2: subitem1 desc'
-						}, {
-							status: true,
-							description: 'item 2: subitem2 desc'
-						}, {
-							status: false,
-							description: 'item 2: subitem3 desc'
-						}
-					]
-				}, {
-					name: "item 3",
-					description: "third test",
-					status: true,
-					subitems: [
-						{
-							status: true,
-							description: 'item 3: subitem1 desc'
-						}, {
-							status: true,
-							description: 'item 3: subitem2 desc'
-						}, {
-							status: false,
-							description: 'item 3: subitem3 desc'
-						}
-					]
-				},
-			],
-			items: [
-				"first",
-				"second",
-				"third"
-			]
-		},
-		container: 'testComponentContainer',
-		template: 'testComponentTemplate',
-		templateInstance: null
-	};
+		let testComponent = {
+			data: {
+				collection: [
+					{
+						name: "item 1",
+						description: "first test",
+						status: true,
+						subitems: [
+							{
+								status: true,
+								description: 'item 1: subitem1 desc'
+							}, {
+								status: false,
+								description: 'item 1: subitem2 desc'
+							}, {
+								status: true,
+								description: 'item 1: subitem3 desc'
+							}
+						]
+					}, {
+						name: "item 2",
+						description: "second test",
+						status: false,
+						subitems: [
+							{
+								status: true,
+								description: 'item 2: subitem1 desc'
+							}, {
+								status: true,
+								description: 'item 2: subitem2 desc'
+							}, {
+								status: false,
+								description: 'item 2: subitem3 desc'
+							}
+						]
+					}, {
+						name: "item 3",
+						description: "third test",
+						status: true,
+						subitems: [
+							{
+								status: true,
+								description: 'item 3: subitem1 desc'
+							}, {
+								status: true,
+								description: 'item 3: subitem2 desc'
+							}, {
+								status: false,
+								description: 'item 3: subitem3 desc'
+							}
+						]
+					},
+				],
+				items: [
+					"first",
+					"second",
+					"third"
+				]
+			},
+			container: 'testComponentContainer',
+			template: 'testComponentTemplate',
+			templateInstance: null
+		};
 
-	window.onload = function() {
-		$_algae.loadComponent(testComponent);
-	};
+		window.onload = function() {
+			$_algae.loadComponent(testComponent);
+		};
 
 	</script>
 

@@ -52,7 +52,7 @@ $_algae.parseDomElement = (current, data = {}) => {
 
 $_algae.parseDomElementInner = (text = '', data = {}) => {
 	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => data[key] || '');    // parse vars
-	ret = ret.replace(/\#\!\%/g, (match, key) => data || '');    // parse vars
+	ret = ret.replace(/\#\!\%/g, (match, key) => data || '');    // 'this'
 	ret = ret.replace(/\#\!\^\(([^\<\>\s]*)\)/g, (match, key) => {                       // parse 'functions'
 		try {    // wrap evaluation in try/catch to avoid breakage if passed invalid data
 			return new Function('$self', `return ${key}`)(data) || '';
@@ -70,7 +70,8 @@ $_algae.loadComponentTemplate = template => {
 	let templateString = (template.innerHTML || '').replace('\n','');
 	let container = document.createElement('div');
 	let parsed = $_algae.htmlParser.parseFromString(templateString, "text/html").body;
-	Array.from(parsed.children).forEach(i => container.appendChild(i));
+	Array.from(parsed.children).forEach(i => container.appendChild(i).cloneNode(true));
+	console.log(container.children);
 	return container;
 };
 
