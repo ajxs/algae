@@ -37,9 +37,13 @@ $_algae.parseDomElement = (current, data = {}) => {
 		}
 	}
 
-	Array.from(current.attributes).forEach(a => a.nodeValue = $_algae.parseDomElementInner(a.nodeValue, data));
+	// parse data attributes
+	Array.from(current.attributes).forEach(a => {
+		a.nodeValue = $_algae.parseDomElementInner(a.nodeValue, data);
+	});
+
 	if(!current.firstChild) return;
-	current.firstChild.nodeValue = $_algae.parseDomElementInner(current.firstChild.nodeValue, data);
+	current.firstChild.nodeValue = $_algae.parseDomElementInner((current.firstChild.nodeValue || ''), data);
 
 	// Recursive call at end to avoid accidentally clobbering child scope with parent in scoped directives
 	Array.from(current.children).forEach(i => $_algae.parseDomElement(i, data));
@@ -48,6 +52,7 @@ $_algae.parseDomElement = (current, data = {}) => {
 
 $_algae.parseDomElementInner = (text = '', data = {}) => {
 	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => data[key] || '');    // parse vars
+	ret = ret.replace(/\#\!\%/g, (match, key) => data || '');    // parse vars
 	ret = ret.replace(/\#\!\^\(([^\<\>\s]*)\)/g, (match, key) => {                       // parse 'functions'
 		try {    // wrap evaluation in try/catch to avoid breakage if passed invalid data
 			return new Function('$self', `return ${key}`)(data) || '';
@@ -59,7 +64,16 @@ $_algae.parseDomElementInner = (text = '', data = {}) => {
 	return ret;
 };
 
-$_algae.loadComponentTemplate = template => $_algae.htmlParser.parseFromString((template.innerHTML || '').replace('\n',''), "text/html").body.firstChild;
+//$_algae.loadComponentTemplate = template => $_algae.htmlParser.parseFromString((template.innerHTML || '').replace('\n',''), "text/html").body.firstChild;
+
+$_algae.loadComponentTemplate = template => {
+	let templateString = (template.innerHTML || '').replace('\n','');
+	let container = document.createElement('div');
+	let parsed = $_algae.htmlParser.parseFromString(templateString, "text/html").body;
+	Array.from(parsed.children).forEach(i => container.appendChild(i));
+	return container;
+};
+
 $_algae.loadComponent = componentInfo => {
 	componentInfo.templateInstance = $_algae.loadComponentTemplate(document.getElementById(componentInfo.template));
 	let tempContainer = document.createDocumentFragment();

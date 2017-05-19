@@ -5,75 +5,105 @@
 	<script type="text/javascript" src="../src/main.js"></script>
 	<script type="text/javascript">
 
-		let issueTracker = {
-			data: {
-				issues: [
-					{
-						title: 'test1',
-						description: 'something',
-						status: true,
-						updates: [{
-							title: 'update1',
-							description: 'test test test test'
-						}]
-				 	},
-					{
-						title: 'test2',
-						status: true,
-						updates: [{
-							title: 'update1',
-							description: 'test test test test'
-						}]
-				 	},
-					{
-						title: 'test3',
-						status: false,
-						updates: [{
-							title: 'update1',
-							description: 'test test test test'
+	let testComponent = {
+		data: {
+			collection: [
+				{
+					name: "item 1",
+					description: "first test",
+					status: true,
+					subitems: [
+						{
+							status: true,
+							description: 'item 1: subitem1 desc'
 						}, {
-							title: 'update2',
-							description: 'test test test test'
+							status: false,
+							description: 'item 1: subitem2 desc'
 						}, {
-							title: 'update3',
-							description: 'test test test test'
-						}]
-				 	},
-				]
-			},
-			container: 'issueTracker',
-			template: 'issueTrackerTemplate',
-			templateInstance: null
-		};
+							status: true,
+							description: 'item 1: subitem3 desc'
+						}
+					]
+				}, {
+					name: "item 2",
+					description: "second test",
+					status: false,
+					subitems: [
+						{
+							status: true,
+							description: 'item 2: subitem1 desc'
+						}, {
+							status: true,
+							description: 'item 2: subitem2 desc'
+						}, {
+							status: false,
+							description: 'item 2: subitem3 desc'
+						}
+					]
+				}, {
+					name: "item 3",
+					description: "third test",
+					status: true,
+					subitems: [
+						{
+							status: true,
+							description: 'item 3: subitem1 desc'
+						}, {
+							status: true,
+							description: 'item 3: subitem2 desc'
+						}, {
+							status: false,
+							description: 'item 3: subitem3 desc'
+						}
+					]
+				},
+			],
+			items: [
+				"first",
+				"second",
+				"third"
+			]
+		},
+		container: 'testComponentContainer',
+		template: 'testComponentTemplate',
+		templateInstance: null
+	};
 
-		window.onload = function() {
-			$_algae.loadComponent(issueTracker);
-		};
+	window.onload = function() {
+		$_algae.loadComponent(testComponent);
+	};
 
 	</script>
 
 
-	<script type="text/html" id="issueTrackerTemplate">
-		<ul class="issues">
-			<li data-loop-source="issues">
-				<h1>#!$title</h1>
+	<script type="text/html" id="testComponentTemplate">
+		<ul>
+			<li data-loop-source="collection">
+				<h1>#!$name</h1>
 				<div>#!$description</div>
 				<div data-display-condition="$self.status">
-					YES - #!$title
-					<div>test - #!$title</div>
+					RESOLVED
+				</div>
+				<div data-display-condition="!$self.status">
+					UNRESOLVED
 				</div>
 				<ul>
-					<li data-display-condition="$self.updates" data-loop-source="updates">
-						<div>#!$title</div>
+					<li data-display-condition="$self.status" data-loop-source="subitems">
 						<div>#!$description</div>
 					</li>
 				</ul>
+			</li>
+		</ul>
+		TEST LIST
+		<ul>
+			<li data-loop-source="items">
+				test - #!%
 			</li>
 		</ul>
 	</script>
 
 </head>
 <body>
-	<div id="issueTracker"></div>
+	<div id="testComponentContainer"></div>
 </body>
 </html>
