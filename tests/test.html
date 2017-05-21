@@ -78,11 +78,11 @@
 
 	<script type="text/html" id="testComponentTemplate">
 		<ul>
-			<li data-loop-source="collection">
+			<li class="#!^($self.name.replace(' ','-'))" data-loop-source="collection">
 				<h1>#!$name</h1>
 				<div>#!$description</div>
 				<div data-display-condition="$self.status">
-					RESOLVED
+					RESOLVED - #!^($self.name.replace(' ','-'))
 				</div>
 				<div data-display-condition="!$self.status">
 					UNRESOLVED

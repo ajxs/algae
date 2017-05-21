@@ -37,23 +37,20 @@ $_algae.parseDomElement = (current, data = {}) => {
 		}
 	}
 
-	// parse data attributes
-	Array.from(current.attributes).forEach(a => {
-		a.nodeValue = $_algae.parseDomElementInner(a.nodeValue, data);
+	Array.from(current.attributes).forEach(a => {                     // parse attributes
+		a.value = $_algae.parseText(a.value, data);
 	});
 
-	if(!current.firstChild) return;
-	current.firstChild.nodeValue = $_algae.parseDomElementInner((current.firstChild.nodeValue || ''), data);
+	current.firstChild.nodeValue = $_algae.parseText((current.firstChild.nodeValue || ''), data);
 
 	// Recursive call at end to avoid accidentally clobbering child scope with parent in scoped directives
 	Array.from(current.children).forEach(i => $_algae.parseDomElement(i, data));
 };
 
 
-$_algae.parseDomElementInner = (text = '', data = {}) => {
+$_algae.parseText = (text = '', data = {}) => {
 	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => data[key] || '');    // parse vars
-	ret = ret.replace(/\#\!\%/g, (match, key) => data || '');    // 'this'
-	ret = ret.replace(/\#\!\^\(([^\<\>\s]*)\)/g, (match, key) => {                       // parse 'functions'
+	ret = ret.replace(/\#\!\^\((.*)\)/, (match, key) => {                       // parse 'functions'
 		try {    // wrap evaluation in try/catch to avoid breakage if passed invalid data
 			return new Function('$self', `return ${key}`)(data) || '';
 		} catch(e) {
@@ -61,19 +58,19 @@ $_algae.parseDomElementInner = (text = '', data = {}) => {
 			return null;
 		}
 	});
+	ret = ret.replace(/\#\!\%/g, (match, key) => data || '');    // 'this'
 	return ret;
 };
 
-//$_algae.loadComponentTemplate = template => $_algae.htmlParser.parseFromString((template.innerHTML || '').replace('\n',''), "text/html").body.firstChild;
 
 $_algae.loadComponentTemplate = template => {
-	let templateString = (template.innerHTML || '').replace('\n','');
 	let container = document.createElement('div');
-	let parsed = $_algae.htmlParser.parseFromString(templateString, "text/html").body;
+	let parsedTemplate = template.innerHTML.replace(/\n/g, '').replace(/>\s+|\s+</g, m => m.trim());
+	let parsed = $_algae.htmlParser.parseFromString(parsedTemplate, "text/html").body;
 	Array.from(parsed.children).forEach(i => container.appendChild(i).cloneNode(true));
-	console.log(container.children);
 	return container;
 };
+
 
 $_algae.loadComponent = componentInfo => {
 	componentInfo.templateInstance = $_algae.loadComponentTemplate(document.getElementById(componentInfo.template));
