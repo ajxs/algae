@@ -1,8 +1,9 @@
 'use strict';
 
-const $_algae = {};
+const $_algae = {
+	htmlParser: new DOMParser()
+};
 
-$_algae.htmlParser = new DOMParser();
 
 $_algae.parseDomElement = (current, data = {}) => {
 	let parentNode = current.parentNode,
@@ -17,10 +18,10 @@ $_algae.parseDomElement = (current, data = {}) => {
 				loopContainer.appendChild(newTemplateItem);
 				$_algae.parseDomElement(newTemplateItem, source);
 			});
-			parentNode.removeChild(current);
+
+			parentNode.removeChild(current);                    // replace 'loop template' with parsed loop items
 			parentNode.insertBefore(loopContainer, refNode);
-			// child elements have already been parsed with their own data context during creation
-			return;
+			return;                                             // child elements have already been parsed with their own data context during creation
 		}
 
 	if(current.dataset.displayCondition) {
@@ -37,10 +38,9 @@ $_algae.parseDomElement = (current, data = {}) => {
 		}
 	}
 
-	Array.from(current.attributes).forEach(a => {                     // parse attributes
-		a.value = $_algae.parseText(a.value, data);
-	});
-
+	// parse attributes
+	Array.from(current.attributes).forEach(a => a.value = $_algae.parseText(a.value, data));
+	// parse inner text
 	current.firstChild.nodeValue = $_algae.parseText((current.firstChild.nodeValue || ''), data);
 
 	// Recursive call at end to avoid accidentally clobbering child scope with parent in scoped directives
@@ -50,15 +50,15 @@ $_algae.parseDomElement = (current, data = {}) => {
 
 $_algae.parseText = (text = '', data = {}) => {
 	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => data[key] || '');    // parse vars
-	ret = ret.replace(/\#\!\^\((.*)\)/, (match, key) => {                       // parse 'functions'
-		try {    // wrap evaluation in try/catch to avoid breakage if passed invalid data
+	ret = ret.replace(/\#\!\%/g, (match, key) => data || '');                          // 'this'
+	ret = ret.replace(/\#\!\^\((.*)\)/, (match, key) => {                              // parse 'functions'
+		try {                                                                            // avoid breakage if passed invalid data
 			return new Function('$self', `return ${key}`)(data) || '';
 		} catch(e) {
 			console.error(e);
 			return null;
 		}
 	});
-	ret = ret.replace(/\#\!\%/g, (match, key) => data || '');    // 'this'
 	return ret;
 };
 
