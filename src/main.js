@@ -5,23 +5,37 @@ const $_algae = {
 };
 
 
-$_algae.parseDomElement = (current, data = {}) => {
+$_algae.parseDomElement = (current, data = {}, parent = data) => {
+	// Elements need to exist on the DOM prior to parsing
 	let parentNode = current.parentNode,
 		refNode = current.nextSibling;
 
 		if(current.dataset.loopSource) {
-			let loopContainer = document.createDocumentFragment(),
-				loopSource = data[current.dataset.loopSource] || [];
-			loopSource.forEach(source => {
+			let loopSourceArray = data[current.dataset.loopSource];
+			if(!loopSourceArray) {
+				console.warn(`loop-source iterable "${current.dataset.loopSource}" evaluates as 'null'.\nIgnoring.`);
+				loopSourceArray = [];    // break out
+			}
+
+			let loopContainer = document.createDocumentFragment();
+			loopSourceArray.forEach(source => {
 				let newTemplateItem = current.cloneNode(true);
+
+				// remove the data from the generated children.
 				delete newTemplateItem.dataset.loopSource;
 				loopContainer.appendChild(newTemplateItem);
-				$_algae.parseDomElement(newTemplateItem, source);
+
+				// newly generated children are parsed independently with their own context
+				// from the loop source array.
+				$_algae.parseDomElement(newTemplateItem, source, parent);
 			});
 
-			parentNode.removeChild(current);                    // replace 'loop template' with parsed loop items
+			// replace 'loop template' with parsed loop items
+			parentNode.removeChild(current);
 			parentNode.insertBefore(loopContainer, refNode);
-			return;                                             // child elements have already been parsed with their own data context during creation
+
+			// child elements have already been parsed with their own data context during creation
+			return;
 		}
 
 	if(current.dataset.displayCondition) {
@@ -39,24 +53,28 @@ $_algae.parseDomElement = (current, data = {}) => {
 	}
 
 	// parse attributes
-	Array.from(current.attributes).forEach(a => a.value = $_algae.parseText(a.value, data));
+	Array.from(current.attributes).forEach(a => a.value = $_algae.parseText(a.value, data, parent));
 	// parse inner text
-	current.firstChild.nodeValue = $_algae.parseText((current.firstChild.nodeValue || ''), data);
+	current.firstChild.nodeValue = $_algae.parseText((current.firstChild.nodeValue || ''), data, parent);
 
 	// Recursive call at end to avoid accidentally clobbering child scope with parent in scoped directives
-	Array.from(current.children).forEach(i => $_algae.parseDomElement(i, data));
+	Array.from(current.children).forEach(i => $_algae.parseDomElement(i, data, parent));
 };
 
 
-$_algae.parseText = (text = '', data = {}) => {
+$_algae.parseText = (text = '', data = {}, parent = {}) => {
 	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => {
 		// parse variables.
 		return data[key] != null ? data[key] : '';    // only omit variables if null
 	});
+
 	ret = ret.replace(/\#\!\%/g, (match, key) => data || '');                          // 'this'
 	ret = ret.replace(/\#\!\^\((.*)\)/, (match, key) => {                              // parse 'functions'
-		try {                                                                            // avoid breakage if passed invalid data
-			return new Function('$self', `return ${key}`)(data) || '';
+		try {
+			// avoid breakage if passed invalid data
+			// this just returns the string as an expression, with "$self" and "$parent"
+			// as operators.
+			return new Function(["$self", "$parent"], `return ${key}`)(data, parent) || '';
 		} catch(e) {
 			console.error(e);
 			return null;

@@ -85,7 +85,7 @@
 					RESOLVED - #!^($self.name.replace(' ','-'))
 				</div>
 				<div data-display-condition="!$self.status">
-					UNRESOLVED
+					UNRESOLVED - #!^($parent.items[0])
 				</div>
 				<ul>
 					<li data-display-condition="$self.status" data-loop-source="subitems">
