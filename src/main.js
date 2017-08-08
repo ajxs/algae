@@ -49,7 +49,10 @@ $_algae.parseDomElement = (current, data = {}) => {
 
 
 $_algae.parseText = (text = '', data = {}) => {
-	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => data[key] || '');    // parse vars
+	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => {
+		// parse variables.
+		return data[key] != null ? data[key] : '';    // only omit variables if null
+	});
 	ret = ret.replace(/\#\!\%/g, (match, key) => data || '');                          // 'this'
 	ret = ret.replace(/\#\!\^\((.*)\)/, (match, key) => {                              // parse 'functions'
 		try {                                                                            // avoid breakage if passed invalid data
