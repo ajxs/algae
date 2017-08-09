@@ -4,47 +4,46 @@ const $_algae = {
 	htmlParser: new DOMParser()
 };
 
-
-$_algae.parseDomElement = (current, data = {}, parentData = data) => {
+$_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 	// Elements need to exist on the DOM prior to parsing
-	let parentNode = current.parentNode,
-		refNode = current.nextSibling;
+	let parentNode = currentNode.parentNode;
 
-	if(current.dataset.loopSource) {
-		let loopSourceArray = data[current.dataset.loopSource];
+	if(currentNode.dataset.loopSource) {
+		let loopSourceArray = data[currentNode.dataset.loopSource];
 		if(!loopSourceArray) {
-			console.warn(`loop-source iterable "${current.dataset.loopSource}" evaluates as 'null'.\nIgnoring.`);
+			console.warn(`loop-source iterable "${currentNode.dataset.loopSource}" evaluates as 'null'.\nIgnoring.`);
 			loopSourceArray = [];    // break out
 		}
 
 		let loopContainer = document.createDocumentFragment();
 		loopSourceArray.forEach(source => {
-			let newTemplateItem = current.cloneNode(true);
+			let newTemplateItem = currentNode.cloneNode(true);
 
 			// remove the data from the generated children.
 			delete newTemplateItem.dataset.loopSource;
 			loopContainer.appendChild(newTemplateItem);
 
 			// newly generated children are parsed independently with their own context
-			// from the loop source array.
+			// from the loop source array. - we parse this here so we can control it's context
 			$_algae.parseDomElement(newTemplateItem, source, parentData);
 		});
 
 		// replace 'loop template' with parsed loop items
-		parentNode.removeChild(current);
-		parentNode.insertBefore(loopContainer, refNode);
+		parentNode.insertBefore(loopContainer, currentNode);
+		parentNode.removeChild(currentNode);
 
 		// child elements have already been parsed with their own data context during creation
 		return;
 	}
 
-	if(current.dataset.displayCondition) {
-		parentNode.removeChild(current);
+	if(currentNode.dataset.displayCondition) {
 		try {
-			if(new Function("$self", "$parent", `return ${current.dataset.displayCondition}`)(data, parentData)) {
+			if(new Function("$self", "$parent", `return ${currentNode.dataset.displayCondition}`)(data, parentData)) {
 				// no need to parse the element here, it will be parsed anyway
-				delete current.dataset.displayCondition;
-				parentNode.insertBefore(current, refNode);
+				delete currentNode.dataset.displayCondition;
+			} else {
+				// Remove the child if the expression evaluates as false
+				parentNode.removeChild(currentNode);
 			}
 		} catch(e) {
 			console.error(e);
@@ -53,18 +52,17 @@ $_algae.parseDomElement = (current, data = {}, parentData = data) => {
 	}
 
 	// parse attributes
-	Array.from(current.attributes).forEach(a => a.value = $_algae.parseText(a.value, data, parentData));
+	Array.from(currentNode.attributes).forEach(a => a.value = $_algae.parseText(a.value, data, parentData));
 	// parse inner text
-	current.firstChild.nodeValue = $_algae.parseText((current.firstChild.nodeValue || ""), data, parentData);
-
+	currentNode.firstChild.nodeValue = $_algae.parseText(currentNode.firstChild.nodeValue || "", data, parentData);
 	// Recursive call at end to avoid accidentally clobbering child scope with parent in scoped directives
-	Array.from(current.children).forEach(i => $_algae.parseDomElement(i, data, parentData));
+	Array.from(currentNode.children).forEach(i => $_algae.parseDomElement(i, data, parentData));
 };
 
 
 $_algae.parseText = (text = "", data = {}, parentData = {}) => {
+	// parse variables.
 	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => {
-		// parse variables.
 		return data[key] != null ? data[key] : "";    // only omit variables if null
 	});
 
