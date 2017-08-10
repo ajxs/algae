@@ -9,8 +9,13 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 	let parentNode = currentNode.parentNode;
 
 	if(currentNode.dataset.loopSource) {
-		let loopSourceArray = $_algae.parseExpression(currentNode.dataset.loopSource, data, parentData);
-
+		let loopSourceArray = null;
+		try {
+			loopSourceArray = $_algae.parseExpression(currentNode.dataset.loopSource, data, parentData);
+		} catch(e) {
+			console.error(e);
+			loopSourceArray = null;
+		}
 
 		//let loopSourceArray = data[loopSourceKey];
 		if(!loopSourceArray) {
@@ -41,7 +46,7 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 
 	if(currentNode.dataset.displayCondition) {
 		try {
-			if(new Function("$self", "$parent", `return ${currentNode.dataset.displayCondition}`)(data, parentData)) {
+			if($_algae.parseExpression(currentNode.dataset.displayCondition, data, parentData)) {
 				// no need to parse the element here, it will be parsed anyway
 				delete currentNode.dataset.displayCondition;
 			} else {
@@ -62,7 +67,15 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 	Array.from(currentNode.children).forEach(i => $_algae.parseDomElement(i, data, parentData));
 };
 
+
+/*
+This function is only to be used for parsing certain attributes,
+which are predetermined to return data and not strings.
+@TODO: document this properly.
+*/
 $_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
+	if(!text) return null;
+
 	// variable reference
 	let varTest = /\#\!\$([^\<\>\s]*)/g.exec(text);
 	if(varTest) {
@@ -77,7 +90,7 @@ $_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
 	let exprTest = /\#\!\^\((.*)\)/g.exec(text);
 	if(exprTest) {
 		try {
-			return new Function(["$self", "$parent"], `return ${exprTest[1]}`)(data, parentData) || "";
+			return new Function(["$self", "$parent"], `return ${exprTest[1]}`)(data, parentData);
 		} catch(e) {
 			console.error(e);
 			return null;
@@ -85,7 +98,7 @@ $_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
 	}
 
 	// if not an expression, just attempt to match to a variable
-	return data[text];
+	return text;
 };
 
 
