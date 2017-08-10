@@ -76,10 +76,12 @@ which are predetermined to return data and not strings.
 $_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
 	if(!text) return null;
 
+	let test = null;
+
 	// variable reference
-	let varTest = /\#\!\$([^\<\>\s]*)/g.exec(text);
-	if(varTest) {
-		return data[varTest[1]];
+	test = /\#\!\$([^\<\>\s]*)/g.exec(text);
+	if(test) {
+		return data[test[1]];
 	}
 
 	if(/\#\!\%/g.exec(text)) {   // 'this' reference
@@ -87,10 +89,10 @@ $_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
 	}
 
 	// evaluate expression
-	let exprTest = /\#\!\^\((.*)\)/g.exec(text);
-	if(exprTest) {
+	test = /\#\!\^\((.*)\)/g.exec(text);
+	if(test) {
 		try {
-			return new Function(["$self", "$parent"], `return ${exprTest[1]}`)(data, parentData);
+			return new Function(["$self", "$parent"], `return ${test[1]}`)(data, parentData);
 		} catch(e) {
 			console.error(e);
 			return null;
@@ -102,25 +104,12 @@ $_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
 };
 
 
+/*
+Function for evaluating text values within markup.
+*/
 $_algae.parseText = (text = "", data = {}, parentData = {}) => {
-	// parse variables.
-	let ret = text.replace(/\#\!\$([^\<\>\s]*)/g, (match, key) => {
-		return data[key] != null ? data[key] : "";    // only omit variables if null
-	});
-
-	ret = ret.replace(/\#\!\%/g, (match, key) => data || "");    // 'this'
-	ret = ret.replace(/\#\!\^\((.*)\)/g, (match, key) => {        // parse 'functions'
-		try {
-			// avoid breakage if passed invalid data
-			// this just returns the string as an expression, with "$self" and "$parent"
-			// as operators.
-			return new Function(["$self", "$parent"], `return ${key}`)(data, parentData) || "";
-		} catch(e) {
-			console.error(e);
-			return null;
-		}
-	});
-	return ret;
+		// evaluate any expressions here, then return the resulting string. "" if null.
+		return new String($_algae.parseExpression(text, data, parentData) || "");
 };
 
 
