@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const $_algae = {
 	htmlParser: new DOMParser()
@@ -9,7 +9,10 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 	let parentNode = currentNode.parentNode;
 
 	if(currentNode.dataset.loopSource) {
-		let loopSourceArray = data[currentNode.dataset.loopSource];
+		let loopSourceArray = $_algae.parseExpression(currentNode.dataset.loopSource, data, parentData);
+
+
+		//let loopSourceArray = data[loopSourceKey];
 		if(!loopSourceArray) {
 			console.warn(`loop-source iterable "${currentNode.dataset.loopSource}" evaluates as 'null'.\nIgnoring.`);
 			loopSourceArray = [];    // break out
@@ -59,6 +62,32 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 	Array.from(currentNode.children).forEach(i => $_algae.parseDomElement(i, data, parentData));
 };
 
+$_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
+	// variable reference
+	let varTest = /\#\!\$([^\<\>\s]*)/g.exec(text);
+	if(varTest) {
+		return data[varTest[1]];
+	}
+
+	if(/\#\!\%/g.exec(text)) {   // 'this' reference
+		return data;
+	}
+
+	// evaluate expression
+	let exprTest = /\#\!\^\((.*)\)/g.exec(text);
+	if(exprTest) {
+		try {
+			return new Function(["$self", "$parent"], `return ${exprTest[1]}`)(data, parentData) || "";
+		} catch(e) {
+			console.error(e);
+			return null;
+		}
+	}
+
+	// if not an expression, just attempt to match to a variable
+	return data[text];
+};
+
 
 $_algae.parseText = (text = "", data = {}, parentData = {}) => {
 	// parse variables.
@@ -67,12 +96,12 @@ $_algae.parseText = (text = "", data = {}, parentData = {}) => {
 	});
 
 	ret = ret.replace(/\#\!\%/g, (match, key) => data || "");    // 'this'
-	ret = ret.replace(/\#\!\^\((.*)\)/, (match, key) => {        // parse 'functions'
+	ret = ret.replace(/\#\!\^\((.*)\)/g, (match, key) => {        // parse 'functions'
 		try {
 			// avoid breakage if passed invalid data
 			// this just returns the string as an expression, with "$self" and "$parent"
 			// as operators.
-			return new Function(["$self", "$parent"], `return ${key}`)(data, parentData) || '';
+			return new Function(["$self", "$parent"], `return ${key}`)(data, parentData) || "";
 		} catch(e) {
 			console.error(e);
 			return null;
@@ -97,5 +126,6 @@ $_algae.loadComponent = componentInfo => {
 	// add to temporary container so that the 'template' instance becomes mutable
 	tempContainer.appendChild(componentInfo.templateInstance);
 	$_algae.parseDomElement(componentInfo.templateInstance, componentInfo.data);
-	document.getElementById(componentInfo.container).appendChild(tempContainer);
+	// return the parsed template as a DOM component
+	return tempContainer;
 };
