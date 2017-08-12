@@ -4,10 +4,6 @@ const $_ALGAE_REGEX_VAR = /\#\!\$([^\<\>\s]*)/;
 const $_ALGAE_REGEX_THIS = /\#\!\%/;
 const $_ALGAE_REGEX_EXPR = /\#\!\^\((.*)\)/;
 
-const $_algae = {
-	htmlParser: new DOMParser()
-};
-
 $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 	// Elements need to exist on the DOM prior to parsing
 	let parentNode = currentNode.parentNode;
@@ -24,7 +20,6 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 			loopSourceArray = null;
 		}
 
-		//let loopSourceArray = data[loopSourceKey];
 		if(!loopSourceArray) {
 			console.warn(`loop-source iterable "${currentNode.dataset.loopSource}" evaluates as 'null'.\nIgnoring.`);
 			loopSourceArray = [];    // break out
@@ -134,23 +129,4 @@ $_algae.parseText = (text = "", data = {}, parentData = {}) => {
 		});
 
 		return ret;
-};
-
-$_algae.loadComponentTemplate = template => {
-	let container = document.createElement("div");
-	let parsedTemplate = template.innerHTML.replace(/\n/g, '').replace(/>\s+|\s+</g, m => m.trim());
-	let parsed = $_algae.htmlParser.parseFromString(parsedTemplate, "text/html").body;
-	Array.from(parsed.children).forEach(i => container.appendChild(i).cloneNode(true));
-	return container;
-};
-
-
-$_algae.loadComponent = componentInfo => {
-	componentInfo.templateInstance = $_algae.loadComponentTemplate(document.getElementById(componentInfo.template));
-	let tempContainer = document.createDocumentFragment();
-	// add to temporary container so that the 'template' instance becomes mutable
-	tempContainer.appendChild(componentInfo.templateInstance);
-	$_algae.parseDomElement(componentInfo.templateInstance, componentInfo.data);
-	// return the parsed template as a DOM component
-	return tempContainer;
 };
