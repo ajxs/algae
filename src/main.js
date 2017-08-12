@@ -1,5 +1,9 @@
 "use strict";
 
+const $_ALGAE_REGEX_VAR = /\#\!\$([^\<\>\s]*)/;
+const $_ALGAE_REGEX_THIS = /\#\!\%/;
+const $_ALGAE_REGEX_EXPR = /\#\!\^\((.*)\)/;
+
 const $_algae = {
 	htmlParser: new DOMParser()
 };
@@ -7,7 +11,10 @@ const $_algae = {
 $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 	// Elements need to exist on the DOM prior to parsing
 	let parentNode = currentNode.parentNode;
-
+	/*
+		Note: on an element with a loop directive, any display directive belongs to the
+		individual elements in the loop, and their corresponding data
+	*/
 	if(currentNode.dataset.loopSource) {
 		let loopSourceArray = null;
 		try {
@@ -25,9 +32,10 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 
 		let loopContainer = document.createDocumentFragment();
 		loopSourceArray.forEach(source => {
+			// create a clone of the 'template node', from which we will create the looped element.
 			let newTemplateItem = currentNode.cloneNode(true);
 
-			// remove the data from the generated children.
+			// remove the loop source data from the generated children.
 			delete newTemplateItem.dataset.loopSource;
 			loopContainer.appendChild(newTemplateItem);
 
@@ -46,13 +54,12 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 
 	if(currentNode.dataset.displayCondition) {
 		try {
-			if($_algae.parseExpression(currentNode.dataset.displayCondition, data, parentData)) {
-				// no need to parse the element here, it will be parsed anyway
-				delete currentNode.dataset.displayCondition;
-			} else {
+			if(!$_algae.parseExpression(currentNode.dataset.displayCondition, data, parentData)) {
 				// Remove the child if the expression evaluates as false
+				// no need to parse the element here, it will be parsed anyway
 				parentNode.removeChild(currentNode);
 			}
+			delete currentNode.dataset.displayCondition;
 		} catch(e) {
 			console.error(e);
 			return null;
@@ -79,17 +86,18 @@ $_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
 	let test = null;
 
 	// variable reference
-	test = /\#\!\$([^\<\>\s]*)/g.exec(text);
+	test = $_ALGAE_REGEX_VAR.exec(text);
 	if(test) {
 		return data[test[1]];
 	}
 
-	if(/\#\!\%/g.exec(text)) {   // 'this' reference
+	// 'this' reference
+	if($_ALGAE_REGEX_THIS.exec(text)) {
 		return data;
 	}
 
 	// evaluate expression
-	test = /\#\!\^\((.*)\)/g.exec(text);
+	test = $_ALGAE_REGEX_EXPR.exec(text);
 	if(test) {
 		try {
 			return new Function(["$self", "$parent"], `return ${test[1]}`)(data, parentData);
@@ -99,8 +107,7 @@ $_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
 		}
 	}
 
-	// if not an expression, just attempt to match to a variable
-	return text;
+	return null;
 };
 
 
@@ -108,10 +115,26 @@ $_algae.parseExpression = (text = "", data = {}, parentData = {}) => {
 Function for evaluating text values within markup.
 */
 $_algae.parseText = (text = "", data = {}, parentData = {}) => {
-		// evaluate any expressions here, then return the resulting string. "" if null.
-		return new String($_algae.parseExpression(text, data, parentData) || "");
-};
+		// parse variables.
+		let ret = text.replace($_ALGAE_REGEX_VAR, (match, key) => {
+			return data[key] != null ? data[key] : "";    // only omit variables if null
+		});
 
+		// parse 'this'
+		ret = ret.replace($_ALGAE_REGEX_THIS, (match, key) => data || "");
+
+		// parse expressions
+		ret = ret.replace($_ALGAE_REGEX_EXPR, (match, key) => {
+			try {
+				return new Function(["$self", "$parent"], `return ${key}`)(data, parentData) || "";
+			} catch(e) {
+				console.error(e);
+				return null;
+			}
+		});
+
+		return ret;
+};
 
 $_algae.loadComponentTemplate = template => {
 	let container = document.createElement("div");
