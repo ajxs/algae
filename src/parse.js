@@ -15,7 +15,7 @@ $_algae.parseAttributeString = (text = "", data = {}, parentData = {}) => {
 	// variable reference
 	test = $_ALGAE_REGEX_VAR.exec(text);
 	if(test) {
-		return data[test[1]];
+		return data[test[1]] || null;
 	}
 
 	// 'this' reference
@@ -112,6 +112,7 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 				// Remove the child if the expression evaluates as false
 				// no need to parse the element here, it will be parsed anyway
 				parentNode.removeChild(currentNode);
+				return;
 			}
 			delete currentNode.dataset.displayCondition;
 		} catch(e) {
