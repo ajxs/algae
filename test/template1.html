@@ -1,0 +1,113 @@
+<html>
+<head>
+	<title>Algae</title>
+
+	<script type="text/javascript" src="../dist/algae.js"></script>
+	<script type="text/javascript">
+
+		let componentData = {
+			collection: [
+				{
+					name: "item 1",
+					description: "first test",
+					status: true,
+					subitems: [
+						{
+							status: true,
+							description: 'item 1: subitem1 desc',
+							sublist: [
+								"first",
+								"second",
+								"third"
+							]
+						}, {
+							status: false,
+							description: 'item 1: subitem2 desc'
+						}, {
+							status: true,
+							description: 'item 1: subitem3 desc'
+						}
+					]
+				}, {
+					name: "item 2",
+					description: "second test",
+					status: false,
+					subitems: [
+						{
+							status: true,
+							description: 'item 2: subitem1 desc'
+						}, {
+							status: true,
+							description: 'item 2: subitem2 desc'
+						}, {
+							status: false,
+							description: 'item 2: subitem3 desc'
+						}
+					]
+				}, {
+					name: "item 3",
+					description: "third test",
+					status: true,
+					subitems: [
+						{
+							status: true,
+							description: 'item 3: subitem1 desc'
+						}, {
+							status: true,
+							description: 'item 3: subitem2 desc',
+							sublist: [
+								"first",
+								"second",
+								"third"
+							]
+						}, {
+							status: false,
+							description: 'item 3: subitem3 desc'
+						}
+					]
+				}
+			]
+		};
+
+		window.onload = function() {
+			let testComponent = $_algae.loadComponent(document.getElementById("testComponentTemplate"), componentData);
+			document.getElementById("testComponentContainer").appendChild(testComponent);
+		};
+
+	</script>
+
+
+	<script type="text/html" id="testComponentTemplate">
+		TEST STRING
+		<ul>
+			<li class="#!^($self.name.replace(' ','-'))"
+				data-loop-source="#!$collection"
+				data-display-condition="#!$status">
+				<h1>#!$name</h1>
+				<div>#!$description</div>
+				<div data-display-condition="#!^($self.status)">
+					RESOLVED - #!^($self.name.replace(' ','-'))
+				</div>
+				<div data-display-condition="#!^(!$self.status)">
+					UNRESOLVED - #!^($parent.items[0])
+				</div>
+				<ul>
+					<li data-display-condition="#!$status" data-loop-source="#!$subitems">
+						<div>#!$description</div>
+						<ul data-display-condition="#!$sublist">
+							<li data-loop-source="#!$sublist">
+								test - #!%
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+		</ul>
+		END STRING
+	</script>
+
+</head>
+<body>
+	<div id="testComponentContainer"></div>
+</body>
+</html>

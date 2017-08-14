@@ -121,10 +121,6 @@ $_algae.parseDomElement = (currentNode, data = {}, parentData = data) => {
 		}
 	}
 
-	// currentNode.childNodes.forEach(n => {
-	// 	console.log(n);
-	// });
-
 	// parse attributes
 	Array.from(currentNode.attributes).forEach(a => a.value = $_algae.parseText(a.value, data, parentData));
 	// parse inner text

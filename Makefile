@@ -1,6 +1,6 @@
 BABEL=./node_modules/.bin/babel
 BABEL_PRESET=--presets latest
-BABEL_ARGS=--source-maps
+BABEL_ARGS=--source-maps --minified
 
 ALGAE=./dist/algae.js
 SRC_DIR=./src/
