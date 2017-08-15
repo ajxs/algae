@@ -10,10 +10,9 @@ fi
 
 for TEST_FILE in ${TEST_FILES}
 do
-	#TEST_NUMBER=$(echo ${TEST_FILE} | sed "s/output\(.*\).txt/\1/")
-	RAW_NAME=$(echo ${TEST_FILE} | sed "s/\(.*\).html/\1/")
+	RAW_NAME="$(echo ${TEST_FILE} | sed "s/\(.*\).html/\1/")"
 
-	# Check for the corresponding
+	# Check for the corresponding output text file
 	OUTPUT_FILE="${RAW_NAME}_output.txt"
 	if [[ ! -f "${OUTPUT_FILE}" ]]
 		then
@@ -32,3 +31,4 @@ do
 	fi
 done
 printf "All tests passed!\n"
+exit 0
