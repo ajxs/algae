@@ -7,7 +7,7 @@
 		"url": "https://github.com/ajxs/algae"
 	},
 	"scripts": {
-		"test": "./test/test.sh"
+		"test": "node test/test.js"
 	},
 	"dependencies": {
 		"babel-core": "^6.26.0",
@@ -16,5 +16,9 @@
 		"gulp-babel": "^7.0.0",
 		"gulp-concat": "^2.6.1",
 		"gulp-watch": "^4.3.11"
+	},
+	"devDependencies": {
+		"phantomjs-prebuilt": "^2.1.16",
+		"selenium-webdriver": "^3.6.0"
 	}
 }

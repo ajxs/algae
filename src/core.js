@@ -6,9 +6,12 @@ const $_algae = {
 
 $_algae.loadComponentTemplate = template => {
 	let container = document.createElement("div");
-	let parsedTemplate = template.innerHTML.replace(/\n/g, '').replace(/>\s+|\s+</g, m => m.trim());
+	let parsedTemplate = template.innerHTML.replace(/\n/g, '');
+	parsedTemplate = parsedTemplate.replace(/>\s+|\s+</g, m => m.trim());
 	let parsed = $_algae.htmlParser.parseFromString(parsedTemplate, "text/html").body;
-	while(parsed.lastChild) container.prepend(parsed.removeChild(parsed.lastChild));
+	while(parsed.lastChild) {
+		container.prepend(parsed.removeChild(parsed.lastChild));
+	}
 	return container;
 };
 
